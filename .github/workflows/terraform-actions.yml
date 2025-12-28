@@ -35,6 +35,7 @@ jobs:
       run: |
         pwd
         terraform init -reconfigure
+        terraform state list
         terraform plan \
           -var-file=../environments/dev.tfvars \
           -out=dev-tfplan
