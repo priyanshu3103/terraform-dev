@@ -32,11 +32,11 @@ jobs:
 
     - name: Terraform Init & Plan
       run: |
+        terraform init -reconfigure
+        terraform plan -out=dev-tfplan
         pwd
         terraform workspace show
         terraform state list
-        terraform init -reconfigure
-        terraform plan -out=dev-tfplan
 
     - uses: actions/upload-artifact@v4
       with:
