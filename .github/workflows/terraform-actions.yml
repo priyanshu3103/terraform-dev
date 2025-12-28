@@ -1,17 +1,15 @@
 name: Terraform Actions
 
 on:
+  push:
+    branches:
+      - master
+
   workflow_dispatch:
-    inputs:
-      run_apply:
-        description: "Apply after successful plan?"
-        required: true
-        default: "false"
-        type: choice
-        options: ["false", "true"]
 
 jobs:
-  plan:
+  validate:
+    name: Terraform Validate
     runs-on: ubuntu-latest
 
     defaults:
@@ -24,25 +22,22 @@ jobs:
     - uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.14.3
-
-    - name: Init & Plan
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        terraform init
-        terraform plan -out=dev-tfplan
-
-    - uses: actions/upload-artifact@v4
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
       with:
-        name: dev-tfplan
-        path: dev-standard/dev-tfplan
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
-  apply:
-    needs: plan
-    if: github.event.inputs.run_apply == 'true'
+    - name: Terraform Validate
+      run: |
+        terraform init -backend=false
+        terraform validate
+
+  plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
-    environment: terraform-apply   # ⬅ MANUAL APPROVAL HERE
+    if: github.event_name == 'workflow_dispatch'
 
     defaults:
       run:
@@ -53,17 +48,42 @@ jobs:
 
     - uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.6.6
+        terraform_version: 1.14.3
+
+    - name: Terraform Init & Plan
+      run: |
+        terraform init
+        terraform plan -out=dev-tfplan
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: dev-tfplan
+        path: dev-standard/dev-tfplan
+
+  apply:
+    name: Terraform Apply
+    needs: plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    environment: terraform-apply
+
+    defaults:
+      run:
+        working-directory: dev-standard
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.14.3
 
     - uses: actions/download-artifact@v4
       with:
         name: dev-tfplan
         path: dev-standard
 
-    - name: Init & Apply
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Terraform Init & Apply
       run: |
         terraform init
         terraform apply -auto-approve dev-tfplan
