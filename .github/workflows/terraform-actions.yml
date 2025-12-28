@@ -34,8 +34,7 @@ jobs:
     - name: Terraform Init & Plan
       run: |
         pwd
-        terraform init -reconfigure \
-          -backend-config=backend.tf
+        terraform init -reconfigure
         terraform plan \
           -var-file=../environments/dev.tfvars \
           -out=dev-tfplan
