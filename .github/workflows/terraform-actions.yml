@@ -1,49 +1,68 @@
-name: Terraform Infra CI/CD
+name: Terraform Actions
 
 on:
-  push:
-    branches:
-      - master
-
-  pull_request:
-
   workflow_dispatch:
     inputs:
-      terraform_destroy:
-        description: "Set to true to DESTROY infrastructure"
+      run_apply:
+        description: "Apply after successful plan?"
         required: true
         default: "false"
         type: choice
-        options:
-          - "false"
-          - "true"
+        options: ["false", "true"]
 
 jobs:
-  terraform:
+  plan:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: dev-standard
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+    - uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.6.6
+        terraform_version: 1.14.3
 
-    - name: Terraform Init
-      run: terraform init
+    - name: Init & Plan
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        terraform init
+        terraform plan -out=dev-tfplan
 
-    - name: Terraform Plan
-      run: terraform plan
+    - uses: actions/upload-artifact@v4
+      with:
+        name: dev-tfplan
+        path: dev-standard/dev-tfplan
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/master' && github.event.inputs.terraform_destroy != 'true'
-      run: terraform apply -auto-approve
+  apply:
+    needs: plan
+    if: github.event.inputs.run_apply == 'true'
+    runs-on: ubuntu-latest
 
-    - name: Terraform Destroy
-      if: github.event.inputs.terraform_destroy == 'true'
-      run: terraform destroy -auto-approve
+    defaults:
+      run:
+        working-directory: dev-standard
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.6
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: dev-tfplan
+        path: dev-standard
+
+    - name: Init & Apply
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        terraform init
+        terraform apply -auto-approve dev-tfplan
