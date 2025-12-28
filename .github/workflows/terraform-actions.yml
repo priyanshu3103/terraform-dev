@@ -32,6 +32,9 @@ jobs:
 
     - name: Terraform Init & Plan
       run: |
+        pwd
+        terraform workspace show
+        terraform state list
         terraform init -reconfigure
         terraform plan -out=dev-tfplan
 
