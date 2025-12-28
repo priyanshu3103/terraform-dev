@@ -3,9 +3,9 @@ name: Terraform Actions
 on:
   push:
     branches:
-      - master          # ⬅ plan on merge (state comparison)
+      - master          # plan on merge (state comparison)
 
-  workflow_dispatch:    # ⬅ manual apply only
+  workflow_dispatch:    # manual apply only
 
 jobs:
   plan:
@@ -33,8 +33,11 @@ jobs:
 
     - name: Terraform Init & Plan
       run: |
-        terraform init -reconfigure -backend-config=../envirenments/dev-backend.tfvars
-        terraform plan  -var-file=../envirenments/dev.tfvars -out=dev-tfplan
+        terraform init -reconfigure \
+          -backend-config=../environments/dev-backend.tfvars
+        terraform plan \
+          -var-file=../environments/dev.tfvars \
+          -out=dev-tfplan
 
     - uses: actions/upload-artifact@v4
       with:
@@ -46,7 +49,7 @@ jobs:
     needs: plan
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
-    environment: terraform-apply   # ⬅ approval gate
+    environment: terraform-apply   # approval gate
 
     defaults:
       run:
@@ -71,8 +74,8 @@ jobs:
         name: dev-tfplan
         path: dev-standard
 
-    - name: Terraform Apply
+    - name: Terraform Init & Apply
       run: |
-        terraform init -reconfigure
-        terraform workspace show || terraform workspace new default
+        terraform init -reconfigure \
+          -backend-config=../environments/dev-backend.tfvars
         terraform apply -auto-approve dev-tfplan
