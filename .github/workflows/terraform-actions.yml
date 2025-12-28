@@ -3,9 +3,9 @@ name: Terraform Actions
 on:
   push:
     branches:
-      - master
+      - master     # ⬅ validate runs on merge
 
-  workflow_dispatch:
+  workflow_dispatch:  # ⬅ manual plan/apply
 
 jobs:
   validate:
@@ -49,7 +49,7 @@ jobs:
     name: Terraform Apply
     needs: plan
     if: github.event_name == 'workflow_dispatch'
-    environment: terraform-apply
+    environment: terraform-apply   # ⬅ approval gate
     uses: ./.github/workflows/terraform-common.yml
     secrets: inherit
 
