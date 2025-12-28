@@ -33,6 +33,7 @@ jobs:
 
     - name: Terraform Init & Plan
       run: |
+        pwd
         terraform init -reconfigure \
           -backend-config=backend.tf
         terraform plan \
@@ -77,5 +78,5 @@ jobs:
     - name: Terraform Init & Apply
       run: |
         terraform init -reconfigure \
-          -backend-config=dev-backend.tf
+          -backend-config=backend.tf
         terraform apply -auto-approve dev-tfplan
