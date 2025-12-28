@@ -3,40 +3,18 @@ name: Terraform Actions
 on:
   push:
     branches:
-      - master          # ⬅ validate on merge
+      - master          # plan on merge (state compare)
 
-  workflow_dispatch:    # ⬅ manual plan / apply
+  workflow_dispatch:    # manual apply
 
 jobs:
-  validate:
-    name: Terraform Validate
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
-    defaults:
-      run:
-        working-directory: dev-standard
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.14.3
-
-    - name: Terraform Validate
-      run: |
-        terraform init -backend=false
-        terraform validate
-
   plan:
-    name: Terraform Plan
+    name: Terraform Init & Plan (dev-standard)
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
 
     defaults:
       run:
-        working-directory: dev-standard
+        working-directory: dev-standard   # ⬅ THIS IS THE KEY
 
     steps:
     - uses: actions/checkout@v4
@@ -54,7 +32,7 @@ jobs:
 
     - name: Terraform Init & Plan
       run: |
-        terraform init
+        terraform init -reconfigure
         terraform plan -out=dev-tfplan
 
     - uses: actions/upload-artifact@v4
@@ -63,11 +41,10 @@ jobs:
         path: dev-standard/dev-tfplan
 
   apply:
-    name: Terraform Apply
-    runs-on: ubuntu-latest
+    name: Terraform Apply (dev-standard)
     needs: plan
-    if: github.event_name == 'workflow_dispatch'
-    environment: terraform-apply   # ⬅ manual approval gate
+    runs-on: ubuntu-latest
+    environment: terraform-apply   # ⬅ approval gate
 
     defaults:
       run:
@@ -92,7 +69,7 @@ jobs:
         name: dev-tfplan
         path: dev-standard
 
-    - name: Terraform Init & Apply
+    - name: Terraform Apply
       run: |
-        terraform init
+        terraform init -reconfigure
         terraform apply -auto-approve dev-tfplan
