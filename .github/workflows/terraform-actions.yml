@@ -3,18 +3,19 @@ name: Terraform Actions
 on:
   push:
     branches:
-      - master          # plan on merge (state compare)
+      - master          # ⬅ plan on merge (state comparison)
 
-  workflow_dispatch:    # manual apply
+  workflow_dispatch:    # ⬅ manual apply only
 
 jobs:
   plan:
     name: Terraform Init & Plan (dev-standard)
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
 
     defaults:
       run:
-        working-directory: dev-standard   # ⬅ THIS IS THE KEY
+        working-directory: dev-standard
 
     steps:
     - uses: actions/checkout@v4
@@ -33,10 +34,8 @@ jobs:
     - name: Terraform Init & Plan
       run: |
         terraform init -reconfigure
+        terraform workspace show || terraform workspace new default
         terraform plan -out=dev-tfplan
-        pwd
-        terraform workspace show
-        terraform state list
 
     - uses: actions/upload-artifact@v4
       with:
@@ -47,6 +46,7 @@ jobs:
     name: Terraform Apply (dev-standard)
     needs: plan
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
     environment: terraform-apply   # ⬅ approval gate
 
     defaults:
@@ -75,4 +75,5 @@ jobs:
     - name: Terraform Apply
       run: |
         terraform init -reconfigure
+        terraform workspace show || terraform workspace new default
         terraform apply -auto-approve dev-tfplan
