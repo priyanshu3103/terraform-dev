@@ -26,7 +26,11 @@ jobs:
     - uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.14.3
-
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::565393042166:role/github-action
+        aws-region: ${{ vars.AWS_REGION }}
     - name: Terraform Init
       run: |
         terraform init  -reconfigure
