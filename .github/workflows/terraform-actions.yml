@@ -3,15 +3,18 @@ name: Terraform Actions
 on:
   push:
     branches:
-      - master          # plan on merge (state comparison)
+      - master
 
-  workflow_dispatch:    # manual apply only
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  plan:
-    name: Terraform Init & Plan (dev-standard)
+  validate:
+    name: Terraform Validate
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
 
     defaults:
       run:
@@ -24,18 +27,40 @@ jobs:
       with:
         terraform_version: 1.14.3
 
-    - name: Configure AWS credentials
+    - name: Terraform Init
+      run: |
+        terraform workspace new dev || terraform workspace select dev
+        terraform init -backend=true
+
+    - name: Terraform Validate
+      run: terraform validate
+
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'workflow_dispatch'
+
+    defaults:
+      run:
+        working-directory: dev-standard
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.14.3
+
+    - name: Configure AWS credentials (OIDC)
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        role-to-assume: arn:aws:iam::565393042166:role/github-action
+        aws-region: ${{ vars.AWS_REGION }}
 
     - name: Terraform Init & Plan
       run: |
-        pwd
         terraform init -reconfigure
-        terraform state list
         terraform plan \
           -var-file=../environments/dev.tfvars \
           -out=dev-tfplan
@@ -46,11 +71,11 @@ jobs:
         path: dev-standard/dev-tfplan
 
   apply:
-    name: Terraform Apply (dev-standard)
-    needs: plan
+    name: Terraform Apply
     runs-on: ubuntu-latest
+    needs: plan
     if: github.event_name == 'workflow_dispatch'
-    environment: terraform-apply   # approval gate
+    environment: terraform-apply
 
     defaults:
       run:
@@ -63,12 +88,11 @@ jobs:
       with:
         terraform_version: 1.14.3
 
-    - name: Configure AWS credentials
+    - name: Configure AWS credentials (OIDC)
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        role-to-assume: arn:aws:iam::123456789012:role/github-oidc-terraform-role
+        aws-region: ${{ vars.AWS_REGION }}
 
     - uses: actions/download-artifact@v4
       with:
@@ -77,6 +101,5 @@ jobs:
 
     - name: Terraform Init & Apply
       run: |
-        terraform init -reconfigure \
-          -backend-config=backend.tf
-        terraform apply -auto-approve dev-tfplan
+        terraform init -reconfigure -backend-config=backend.tf
+        terraform apply dev-tfplan
