@@ -30,7 +30,7 @@ jobs:
     - name: Terraform Init
       run: |
         terraform workspace new dev || terraform workspace select dev
-        terraform init -migrate-state
+        terraform init -reconfigure
 
     - name: Terraform Validate
       run: terraform validate
