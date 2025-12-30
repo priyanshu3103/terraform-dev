@@ -66,7 +66,7 @@ jobs:
       run: |
         terraform init -reconfigure
         terraform plan \
-          -var-file=../environments/dev.tfvars \
+          -var-file=../environments/dev/dev.tfvars \
           -out=dev-tfplan
 
     - uses: actions/upload-artifact@v4
