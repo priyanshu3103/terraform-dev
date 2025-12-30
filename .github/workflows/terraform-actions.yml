@@ -29,8 +29,8 @@ jobs:
 
     - name: Terraform Init
       run: |
+        terraform init -backend=true
         terraform workspace new dev || terraform workspace select dev
-        terraform init -reconfigure
 
     - name: Terraform Validate
       run: terraform validate
