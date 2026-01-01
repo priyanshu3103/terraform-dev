@@ -4,7 +4,7 @@ resource "aws_s3_bucket" "aws-s3-bucket" {
 }
 
 resource "aws_s3_bucket_versioning" "aws-s3-versioning" {
-  bucket = aws_s3_bucket.aws-s3-bucket.name
+  bucket = aws_s3_bucket.aws-s3-bucket.id
 
   versioning_configuration {
     status = var.versioning ? "Enabled" : "Suspended"
