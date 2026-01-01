@@ -4,7 +4,7 @@ variable "enable_s3_bucket" {
   description = "Enable S3 bucket creation"
 }
 
-module "DEV-S3-BUCKET" {
+module "DEV_S3_BUCKET" {
   source = "../modules/s3"
   bucket_name = "${var.environment}-s3-bucket"
   versioning  = true
@@ -14,6 +14,6 @@ module "DEV-S3-BUCKET" {
   }
 }
 
-output "DEV-S3-BUCKET" {
-  value       = module.DEV-S3-BUCKET.bucket_name
+output "DEV_S3_BUCKET" {
+  value       = module.DEV_S3_BUCKET.bucket_name
 }
