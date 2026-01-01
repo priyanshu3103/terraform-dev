@@ -15,5 +15,5 @@ module "DEV_S3_BUCKET" {
 }
 
 output "DEV_S3_BUCKET" {
-  value       = module.DEV_S3_BUCKET.bucket_name
+  value       = module.DEV_S3_BUCKET.bucket_id
 }
