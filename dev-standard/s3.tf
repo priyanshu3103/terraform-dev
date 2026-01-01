@@ -15,5 +15,5 @@ module "DEV-S3-BUCKET" {
 }
 
 output "DEV-S3-BUCKET" {
-  value       = module.DEV-S3-BUCKET.name
+  value       = module.DEV-S3-BUCKET.bucket_name
 }
