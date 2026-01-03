@@ -11,3 +11,13 @@ module "DEV_S3_PERSONAL_BACKUPS" {
     Environment = var.environment
   }
 }
+
+module "BUCKET-EVENT-NOUTIFICATION" {
+  source = "../modules/s3-notification"
+  bucket_name = module.DEV_S3_PERSONAL_BACKUPS.bucket_name
+  topic {
+    topic_arn     = module.DEV_SNS.sns_topic_arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_suffix = ".log"
+  }
+}
