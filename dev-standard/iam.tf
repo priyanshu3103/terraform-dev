@@ -1,4 +1,4 @@
-resource "aws_iam_policy_document" "sns-topic" {
+data "aws_iam_policy_document" "sns-topic" {
   statement {
     effect = "Allow"
 
