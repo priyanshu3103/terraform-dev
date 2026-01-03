@@ -1,4 +1,4 @@
 resource "aws_sns_topic" "sns-topic" {
-  name = var.topic_name
+  name = var.sns_topic_name
   tags = var.tags
 }
