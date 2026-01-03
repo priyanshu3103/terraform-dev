@@ -1,5 +1,5 @@
-resource "aws_default_vpc" "default" {
-  tags = {
-    Name = var.vpc_name
-  }
-}
+# resource "aws_default_vpc" "default" {
+#   tags = {
+#     Name = var.vpc_name
+#   }
+# }
