@@ -14,10 +14,9 @@ module "DEV_S3_PERSONAL_BACKUPS" {
 
 module "DEV_S3_PERSONAL_BACKUPS_EVENT_NOTIFICATION" {
   source = "../modules/s3_notification"
-  bucket_name = module.DEV_S3_PERSONAL_BACKUPS.bucket_name
-  topic {
-    topic_arn     = module.DEV_SNS.sns_topic_arn
-    events        = ["s3:ObjectCreated:*"]
-    filter_suffix = ".log"
-  }
+  bucket_id = module.DEV_S3_PERSONAL_BACKUPS.bucket_id
+  sns_topic_arn = module.DEV_SNS.sns_topic_arn
+  events        = ["s3:ObjectCreated:*"]
+  filter_suffix = ".log"
+  depends_on = [module.DEV_SNS]
 }
