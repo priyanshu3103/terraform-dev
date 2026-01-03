@@ -8,10 +8,6 @@ module "DEV_S3_PERSONAL_BACKUPS" {
   source = "../modules/s3"
   bucket_name = "${var.environment}-s3-personal-backups-us-west-2"
   versioning  = true
-  tags        = {
-    Environment = var.environment
-    terraform   = "true"
-  }
 }
 
 output "DEV_S3_PERSONAL_BACKUPS" {

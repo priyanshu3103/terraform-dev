@@ -1,6 +1,9 @@
 resource "aws_s3_bucket" "aws-s3-bucket" {
   bucket = var.bucket_name
-  tags   = var.tags
+  tags        = {
+    Environment = var.environment
+    terraform   = "true"
+  }
 }
 
 resource "aws_s3_bucket_versioning" "aws-s3-versioning" {
