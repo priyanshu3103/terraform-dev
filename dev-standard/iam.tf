@@ -13,7 +13,7 @@ data "aws_iam_policy_document" "sns-topic" {
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
-      values   = [module.DEV_S3_PERSONAL_BACKUPS.bucketarn]
+      values   = [module.DEV_S3_PERSONAL_BACKUPS.bucket_arn]
     }
   }
 }
